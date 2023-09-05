@@ -4,9 +4,17 @@ const app = express();
 require("dotenv").config();
 require("express-async-errors");
 
+const { User, Post } = require("./db/models");
+
 app.use(express.json());
 
 // Lesgiddit
+app.get("/users", async (req, res) => {
+	const users = await User.findAll();
+	console.log(users);
+
+	return res.json({ users });
+});
 
 app.get("/", (req, res) => {
 	res.json({
@@ -14,6 +22,7 @@ app.get("/", (req, res) => {
 	});
 });
 
+// Error handlers
 app.use((_req, _res, next) => {
 	const err = new Error("The requested resource couldn't be found.");
 	err.title = "Resource Not Found";
@@ -22,7 +31,6 @@ app.use((_req, _res, next) => {
 	next(err);
 });
 
-// Error handlers
 const { ValidationError } = require("sequelize");
 
 app.use((err, _req, _res, next) => {
@@ -40,7 +48,7 @@ app.use((err, _req, res, _next) => {
 		title: err.title || "Server Error",
 		message: err.message,
 		errors: err.errors,
-		stack: isProduction ? null : err.stack,
+		// stack: isProduction ? null : err.stack,
 	});
 });
 
