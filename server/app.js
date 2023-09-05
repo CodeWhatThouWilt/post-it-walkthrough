@@ -4,9 +4,57 @@ const app = express();
 require("dotenv").config();
 require("express-async-errors");
 
+const { User, Post } = require("./db/models");
+
 app.use(express.json());
 
-// Lesgiddit
+// Get all users
+app.get("/users", async (req, res) => {
+	const users = await User.findAll();
+
+	return res.json({ users });
+});
+
+app.get("/users/:userId", async (req, res) => {
+	const { userId } = req.params;
+
+	const user = await User.findByPk(userId);
+
+	return res.json({ user });
+});
+
+app.post("/users", async (req, res) => {
+	const { username } = req.body;
+
+	const newUser = await User.create({
+		username,
+	});
+
+	return res.status(201).json({ user: newUser });
+});
+
+app.delete("/users/:userId", async (req, res) => {
+	const { userId } = req.params;
+
+	const doomedUser = await User.findByPk(userId);
+
+	await doomedUser.destroy();
+
+	return res.json({ msg: `User ${userId} successfully deleted` });
+});
+
+app.put("/users/:userId", async (req, res) => {
+	const { username } = req.body;
+	const { userId } = req.params;
+
+	const user = await User.findByPk(userId);
+
+	user.username = username;
+
+	await user.save();
+
+	return res.json({ user });
+});
 
 app.get("/", (req, res) => {
 	res.json({
@@ -14,6 +62,7 @@ app.get("/", (req, res) => {
 	});
 });
 
+// Error handlers
 app.use((_req, _res, next) => {
 	const err = new Error("The requested resource couldn't be found.");
 	err.title = "Resource Not Found";
@@ -22,7 +71,6 @@ app.use((_req, _res, next) => {
 	next(err);
 });
 
-// Error handlers
 const { ValidationError } = require("sequelize");
 
 app.use((err, _req, _res, next) => {
